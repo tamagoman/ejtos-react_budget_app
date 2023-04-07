@@ -59,8 +59,32 @@ export const AppReducer = (state, action) => {
             };
         case 'SET_BUDGET':
             action.type = "DONE";
-            state.budget = action.payload;
+            if(action.payload>20000) {
+                let remaining = null;
+                if (state.expenses) {
+                    const totalExpenses = state.expenses.reduce((total, item) => {
+                        return (total = total + item.cost);
+                    }, 0);
+                    remaining = state.budget - totalExpenses;
+                }
+                alert("The value cannot exceed the remaining founds "+state.currency+remaining);
+            }
+            else {
+                const total_spend = state.expenses.reduce(
+                    (previousExp, currentExp) => {
+                        return previousExp + currentExp.cost
+                    },0
+                );
+    
+                if(action.payload<total_spend) {
+                    alert("You cannot reduce the budget value lower than the spending");
+                }else {
+                    state.budget = action.payload;
+        
+                }
 
+            }
+            
             return {
                 ...state,
             };
@@ -98,13 +122,15 @@ export const AppProvider = (props) => {
     // 4. Sets up the app state. takes a reducer, and an initial state
     const [state, dispatch] = useReducer(AppReducer, initialState);
     let remaining = 0;
-
+    let spend = 0;
     if (state.expenses) {
             const totalExpenses = state.expenses.reduce((total, item) => {
             return (total = total + item.cost);
         }, 0);
         remaining = state.budget - totalExpenses;
+        spend = totalExpenses;
     }
+
 
     return (
         <AppContext.Provider
@@ -113,7 +139,8 @@ export const AppProvider = (props) => {
                 budget: state.budget,
                 remaining: remaining,
                 dispatch,
-                currency: state.currency
+                currency: state.currency,
+                spend: spend
             }}
         >
             {props.children}
